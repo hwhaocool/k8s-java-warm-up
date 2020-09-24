@@ -1,6 +1,9 @@
 package com.yellow.k8s.warmup.service;
 
-import com.yellow.k8s.warmup.model.PodEvent;
+import com.yellow.k8s.warmup.dao.HttpStatusRepository;
+import com.yellow.k8s.warmup.dao.RequestRepository;
+import com.yellow.k8s.warmup.dbdoc.HttpStatusDocument;
+import com.yellow.k8s.warmup.dbdoc.RequestDocument;
 import com.yellow.k8s.warmup.vo.WarmUpRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -15,12 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * @author YellowTail
@@ -35,21 +39,35 @@ public class CallBackService {
     @Qualifier("k8sClient")
     private WebClient webClient;
 
+    @Autowired
+    private RequestRepository requestRepository;
+
+    @Autowired
+    private HttpStatusRepository httpStatusRepository;
+
 //    @Autowired
     private PodStatusCheckService podStatusCheckService;
 
     public Mono<String> single(WarmUpRequest request) {
+        // 1. 生成 请求id
+        final ObjectId requestId = ObjectId.get();
 
-        ObjectId objectId = ObjectId.get();
+        // 2. 生成 uri 列表
+        final List<URI> uriList = genUri(request);
 
-        List<URI> uriList = genUri(request);
+        // 3. 保存请求信息
+        requestRepository.save(genRequestDoc(request))
+            .subscribe();
 
-        sendOneByOne(request, uriList, 0);
+        // 4. 发送
+        sendOneByOne(request, uriList, 0, requestId);
 
-        return Mono.just(objectId.toHexString());
+        return Mono.just(requestId.toHexString());
     }
 
-    private void sendOneByOne(WarmUpRequest request, List<URI> uriList, int index) {
+
+
+    private void sendOneByOne(final WarmUpRequest request, final List<URI> uriList, final int index, final ObjectId requestId) {
 
         LOGGER.info("sendOneByOne current index {}", index);
 
@@ -89,9 +107,10 @@ public class CallBackService {
                 .retrieve()
                 .toBodilessEntity()
                 .elapsed()
-                .doOnNext(tuple -> LOGGER.info("Milliseconds for retrieve {}" , tuple.getT1()))
-                .map(k -> k.getT2())
-                .subscribe( k -> sendOneByOne(request, uriList, nextIndex));
+                .doOnNext(tuple -> saveCost2Db(podIp, tuple.getT1(), requestId))                                         // 耗时
+                .map(Tuple2::getT2)
+                .subscribe( k -> sendOneByOne(request, uriList, nextIndex, requestId))                                 // 递归调用， one by one
+        ;
     }
 
     public Mono<String> multi(WarmUpRequest request) {
@@ -138,5 +157,45 @@ public class CallBackService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    private void saveCost2Db(final String podIp, final Long cost, final ObjectId requestId) {
+
+        LOGGER.info("saveCost2Db {} cost {}", requestId.toHexString(), cost);
+
+        HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
+
+        httpStatusRepository.save(genRequestDoc(podIp, cost, requestId))
+                .subscribe();
+    }
+
+    private RequestDocument genRequestDoc(final WarmUpRequest request) {
+        RequestDocument requestDocument = new RequestDocument();
+        requestDocument.setIp(request.getIp());
+        requestDocument.setPort(request.getPort());
+        requestDocument.setMethod(request.getMethod());
+        requestDocument.setPodName(request.getPodName());
+
+        requestDocument.setQueryParamName(request.getQueryParamName());
+        requestDocument.setParamList(request.getParamList());
+
+        Map<String, String> headers = request.getHeaders();
+        if (MapUtils.isNotEmpty(headers)) {
+            requestDocument.setHeaders(headers.toString());
+        }
+
+        return requestDocument;
+    }
+
+    private HttpStatusDocument genRequestDoc(final String podIp, final Long cost, final ObjectId requestId) {
+        HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
+
+        httpStatusDocument.setRequestId(requestId.toHexString());
+        httpStatusDocument.setRequestObjectId(requestId);
+        httpStatusDocument.setCost(null == cost ? 0 : (int)(long) cost);
+
+        httpStatusDocument.setCreateTime(new Date());
+
+        return httpStatusDocument;
     }
 }

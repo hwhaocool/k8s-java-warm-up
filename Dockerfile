@@ -1,7 +1,7 @@
 # 指定基础镜像，必须为第一个命令
-FROM adoptopenjdk/openjdk11:debian
+FROM hwhaocool/java11:latest
 
-MAINTAINER yellowtail
+MAINTAINER hwhaocool
 
 # ENV 设置环境变量
 ENV LC_ALL C.UTF-8

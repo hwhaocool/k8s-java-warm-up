@@ -45,7 +45,7 @@ public class CallBackService {
     @Autowired
     private HttpStatusRepository httpStatusRepository;
 
-//    @Autowired
+    @Autowired
     private PodStatusCheckService podStatusCheckService;
 
     public Mono<String> single(WarmUpRequest request) {

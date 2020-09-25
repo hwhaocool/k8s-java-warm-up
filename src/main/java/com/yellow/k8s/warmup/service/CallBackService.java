@@ -101,11 +101,13 @@ public class CallBackService {
             headers.forEach(requester::header);
         }
 
-        requester.uri(uriList.get(index))
+        URI uri = uriList.get(index);
+
+        requester.uri(uri)
                 .retrieve()
                 .toBodilessEntity()
                 .elapsed()
-                .doOnNext(tuple -> saveCost2Db(podIp, tuple.getT1(), requestId))                                         // 耗时
+                .doOnNext(tuple -> saveCost2Db(uri, podIp, tuple.getT1(), requestId))                                         // 耗时
                 .map(Tuple2::getT2)
                 .subscribe( k -> sendOneByOne(request, uriList, nextIndex, requestId))                                 // 递归调用， one by one
         ;
@@ -157,9 +159,9 @@ public class CallBackService {
                 .collect(Collectors.toList());
     }
 
-    private void saveCost2Db(final String podIp, final Long cost, final ObjectId requestId) {
+    private void saveCost2Db(final URI uri, final String podIp, final Long cost, final ObjectId requestId) {
 
-        LOGGER.info("saveCost2Db {} cost {}", requestId.toHexString(), cost);
+        LOGGER.info("saveCost2Db, uir {}, podIp {}, cost {}", uri, podIp, cost);
 
         HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
 

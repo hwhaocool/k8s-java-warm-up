@@ -16,4 +16,11 @@ public class PodInfo {
     public final void setStatus(final PodStatus status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "PodInfo{" +
+                "status=" + status +
+                '}';
+    }
 }

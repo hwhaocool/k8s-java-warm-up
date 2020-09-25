@@ -74,4 +74,17 @@ public class PodStatus {
     public final void setContainerStatuses(final List<ContainerStatus> containerStatuses) {
         this.containerStatuses = containerStatuses;
     }
+
+    @Override
+    public String toString() {
+        return "PodStatus{" +
+                "phase='" + phase + '\'' +
+                ", hostIP='" + hostIP + '\'' +
+                ", podIP='" + podIP + '\'' +
+                ", startTime='" + startTime + '\'' +
+                ", reason='" + reason + '\'' +
+                ", conditions=" + conditions +
+                ", containerStatuses=" + containerStatuses +
+                '}';
+    }
 }

@@ -26,4 +26,12 @@ public class ContainerStatus {
     public final void setReady(final boolean ready) {
         this.ready = ready;
     }
+
+    @Override
+    public String toString() {
+        return "ContainerStatus{" +
+                "name='" + name + '\'' +
+                ", ready=" + ready +
+                '}';
+    }
 }

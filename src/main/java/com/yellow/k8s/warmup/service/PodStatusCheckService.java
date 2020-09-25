@@ -155,6 +155,12 @@ public class PodStatusCheckService implements InitializingBean {
     private void findDelEvent(PodInfo podInfo) {
         //删除
         String podIP = podInfo.getStatus().getPodIP();
+
+        if (StringUtils.isBlank(podIP)) {
+            // pod 被删除之后， 是没有ip的
+            return;
+        }
+
         cache.invalidate(podIP);
 
         String name = Null.of(() -> podInfo.getStatus().getContainerStatuses().get(0).getName());

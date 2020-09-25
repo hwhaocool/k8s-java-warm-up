@@ -147,7 +147,7 @@ public class PodStatusCheckService implements InitializingBean {
             cache.put(podIP, true);
 
             String name = Null.of(() -> containerStatuses.get(0).getName());
-            LOGGER.info("findUpdateEvent name {}, ip {}", name, podIP);
+            LOGGER.info("findUpdateEvent, pod_is_ready, name {}, ip {}", name, podIP);
         }
 
     }

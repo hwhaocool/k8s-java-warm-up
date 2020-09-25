@@ -1,11 +1,11 @@
 package com.yellow.k8s.warmup.dao;
 
-import com.yellow.k8s.warmup.dbdoc.PodTopDocument;
 import com.yellow.k8s.warmup.dbdoc.RequestDocument;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.DeleteQuery;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -26,6 +26,9 @@ public interface RequestRepository  extends ReactiveCrudRepository<RequestDocume
 
 //    Mono<RequestDocument> findById(String id);
 
+//    @Query()
+    @Query(value = "{'_id': {$lt: ?0} }", sort="{_id: -1}")
+    Flux<RequestDocument> getList(ObjectId id);
 
     @Query(value = "{ name: ?0, _id: {$gt: ?1}}", sort="{_id: -1}")
     Flux<RequestDocument> findByName(String name, ObjectId minId);

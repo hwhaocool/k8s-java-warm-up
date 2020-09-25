@@ -10,14 +10,11 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.stream.Stream;
 
 /**
  * @author YellowTail
@@ -52,9 +49,10 @@ public class MonitorService {
 //        Page<RequestDocument> requestDocuments = requestRepository.findAll(pageRequest);
 //
 //        Stream<RequestDocument> requestDocumentStream = requestDocuments.get();
-//        Flux.str
 
-        Flux<RequestDocument> list = requestRepository.getList(null);
+//        requestRepository.findAll()
+
+        Flux<RequestDocument> list = requestRepository.findAll(Sort.by(Sort.Direction.DESC, "_id"));
 
         return list.limitRequest(20);
 

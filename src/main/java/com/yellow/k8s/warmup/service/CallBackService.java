@@ -78,13 +78,11 @@ public class CallBackService {
 
         // 1. 检查pod 状态
         String podIp = request.getIp();
-//        if (podStatusCheckService.isPodReady(podIp)) {
-//            // 已就绪，就停止
-//            LOGGER.info("pod {} is ready, stop", podIp);
-//            return;
-//        }
-
-
+        if (podStatusCheckService.isPodReady(podIp)) {
+            // 已就绪，就停止
+            LOGGER.info("pod {} is ready, stop", podIp);
+            return;
+        }
 
         // 2. 计算下次 index
         int nextIndex = genIndex(uriList, index);

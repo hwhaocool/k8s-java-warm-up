@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.yellow.k8s.warmup.model.ContainerStatus;
 import com.yellow.k8s.warmup.model.PodEvent;
 import com.yellow.k8s.warmup.model.PodInfo;
+import com.yellow.k8s.warmup.utils.Null;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author YellowTail
  * @since 2020-09-23
  */
-//@Service
+@Service
 public class PodStatusCheckService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PodStatusCheckService.class);
@@ -112,9 +113,13 @@ public class PodStatusCheckService implements InitializingBean {
     }
 
     private void findAddEvent(PodInfo podInfo) {
-        // 添加，m默认状态为 false
+        // 添加，默认状态为 false
         String podIP = podInfo.getStatus().getPodIP();
+
         cache.put(podIP, false);
+
+        String name = Null.of(() -> podInfo.getStatus().getContainerStatuses().get(0).getName());
+        LOGGER.info("findAddEvent name {}, ip {}", name, podIP);
     }
 
     private void findUpdateEvent(PodInfo podInfo) {
@@ -128,6 +133,9 @@ public class PodStatusCheckService implements InitializingBean {
             // 已就绪，状态更新为 true
             String podIP = podInfo.getStatus().getPodIP();
             cache.put(podIP, true);
+
+            String name = Null.of(() -> containerStatuses.get(0).getName());
+            LOGGER.info("findUpdateEvent name {}, ip {}", name, podIP);
         }
 
     }
@@ -136,6 +144,9 @@ public class PodStatusCheckService implements InitializingBean {
         //删除
         String podIP = podInfo.getStatus().getPodIP();
         cache.invalidate(podIP);
+
+        String name = Null.of(() -> podInfo.getStatus().getContainerStatuses().get(0).getName());
+        LOGGER.info("findDelEvent name {}, ip {}", name, podIP);
     }
 
 

@@ -56,7 +56,7 @@ public class CallBackService {
         final List<URI> uriList = genUri(request);
 
         // 3. 保存请求信息
-        requestRepository.save(genRequestDoc(request))
+        requestRepository.save(genRequestDoc(request, requestId))
             .subscribe();
 
         // 4. 发送
@@ -169,8 +169,11 @@ public class CallBackService {
                 .subscribe();
     }
 
-    private RequestDocument genRequestDoc(final WarmUpRequest request) {
+    private RequestDocument genRequestDoc(final WarmUpRequest request, final ObjectId requestId) {
         RequestDocument requestDocument = new RequestDocument();
+
+        requestDocument.set_id(requestId.toHexString());
+
         requestDocument.setIp(request.getIp());
         requestDocument.setPort(request.getPort());
         requestDocument.setMethod(request.getMethod());

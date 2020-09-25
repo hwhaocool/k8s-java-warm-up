@@ -73,7 +73,7 @@ public class PodStatusCheckService implements InitializingBean {
 
         Flux<PodEvent> podEventFlux = webClient.get()
                 .uri("/api/v1/pods?watch=true")
-                .accept(MediaType.APPLICATION_STREAM_JSON)
+                .accept(MediaType.ALL)
                 .retrieve()
                 .bodyToFlux(PodEvent.class);
 

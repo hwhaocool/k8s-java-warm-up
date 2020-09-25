@@ -27,8 +27,11 @@ public interface RequestRepository  extends ReactiveCrudRepository<RequestDocume
 //    Mono<RequestDocument> findById(String id);
 
 //    @Query()
-    @Query(value = "{'_id': {$lt: ?0} }", sort="{_id: -1}")
+    @Query(sort="{_id: -1}")
     Flux<RequestDocument> getList(ObjectId id);
+
+    @Query(value = "{'_id': {$lt: ?0} }", sort="{_id: -1}")
+    Flux<RequestDocument> getListById(ObjectId id);
 
     @Query(value = "{ name: ?0, _id: {$gt: ?1}}", sort="{_id: -1}")
     Flux<RequestDocument> findByName(String name, ObjectId minId);

@@ -174,6 +174,8 @@ public class CallBackService {
         requestDocument.setMethod(request.getMethod());
         requestDocument.setPodName(request.getPodName());
 
+        requestDocument.setCreateTime(new Date());
+
         requestDocument.setQueryParamName(request.getQueryParamName());
         requestDocument.setParamList(request.getParamList());
 

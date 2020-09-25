@@ -7,6 +7,7 @@ import com.yellow.k8s.warmup.model.PodEvent;
 import com.yellow.k8s.warmup.model.PodInfo;
 import com.yellow.k8s.warmup.utils.Null;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -97,24 +98,35 @@ public class PodStatusCheckService implements InitializingBean {
 
         String type = k.getType();
         PodInfo podInfo = k.getObject();
-        switch (type) {
-            case "ADDED":
-                findAddEvent(podInfo);
-                return;
-            case "MODIFIED":
-                findUpdateEvent(podInfo);
-                return;
-            case "DELETED":
-                findDelEvent(podInfo);
-                return;
-            default:
-                LOGGER.error("bad type {}", type);
+
+        try {
+            switch (type) {
+                case "ADDED":
+                    findAddEvent(podInfo);
+                    return;
+                case "MODIFIED":
+                    findUpdateEvent(podInfo);
+                    return;
+                case "DELETED":
+                    findDelEvent(podInfo);
+                    return;
+                default:
+                    LOGGER.error("bad type {}", type);
+            }
+        } catch (Exception e) {
+            LOGGER.error("occur exception, ", e);
         }
+
     }
 
     private void findAddEvent(PodInfo podInfo) {
         // 添加，默认状态为 false
         String podIP = podInfo.getStatus().getPodIP();
+
+        if (StringUtils.isBlank(podIP)) {
+            // 真正在创建pod的时候， 是没有ip的
+            return;
+        }
 
         cache.put(podIP, false);
 

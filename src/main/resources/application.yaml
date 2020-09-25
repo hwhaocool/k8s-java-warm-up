@@ -1,0 +1,30 @@
+
+server:
+  port: 8081
+
+
+spring:
+  webflux:
+    base-path: /api/warmup
+
+  jackson:
+    default-property-inclusion: non-null
+    time-zone: GMT+8
+
+  data:
+    mongodb:
+        uri: ${mongodb-uri}
+
+   
+# monitor 表示要监控的数据库， 这里的配置需要自行修改
+monitor-major-mongodb:
+  # 比如： mongodb://name:passwd@db-major-primary:3717,db-major-secondary:3717/db
+  client-uri: ${major-db-uri}
+  database:  ${major-db}
+  connections-per-host: 50
+
+k8s:
+  master-url: ${master-url}
+  token: ${k8s-token}
+
+

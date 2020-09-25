@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] %p [ %thread] %c{50}:%L - %m%n</pattern>
+            <charset class="java.nio.charset.Charset">UTF-8</charset>
+        </encoder>
+    </appender>
+    
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>logs/warmup.log</File>
+        <Append>true</Append>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] %p [ %thread] %c{50}:%L - %m%n</pattern>
+            <charset class="java.nio.charset.Charset">UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/warmup.log.%d{yyyy-MM-dd_HH}.%i.log</fileNamePattern>
+            <!-- 每个文件最大 100M ，最多保留1个单位，但是总的大小不超过2G -->
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>1</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+    
+
+    <logger name="org.springframework.boot" level="INFO" />
+    <logger name="org.springframework.web.context.ContextLoader" level="INFO" />
+
+    <!-- 这个日志打印 接口路径列表 -->
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="TRACE" />
+    <logger name="org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping" level="TRACE" />
+
+    <root level="INFO">
+        <appender-ref ref="console" />
+        <appender-ref ref="file" />
+    </root>
+</configuration>
+

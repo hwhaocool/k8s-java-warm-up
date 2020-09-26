@@ -1,5 +1,6 @@
 package com.yellow.k8s.warmup.service;
 
+import com.yellow.k8s.warmup.contant.WarmUpConstants;
 import com.yellow.k8s.warmup.dao.HttpStatusRepository;
 import com.yellow.k8s.warmup.dao.RequestRepository;
 import com.yellow.k8s.warmup.dbdoc.HttpStatusDocument;
@@ -51,6 +52,12 @@ public class CallBackService {
     public Mono<String> single(WarmUpRequest request) {
         // 1. 生成 请求id
         final ObjectId requestId = ObjectId.get();
+        Mono<String> result = Mono.just(requestId.toHexString());
+
+        // 2. 开关， 环境变量： warm-up-single: on/off, 可以关闭，以便对比效果
+        if (! isSingleTurnOn()) {
+            return result;
+        }
 
         // 2. 生成 uri 列表
         final List<URI> uriList = genUri(request);
@@ -62,7 +69,7 @@ public class CallBackService {
         // 4. 发送
         sendOneByOne(request, uriList, 0, requestId);
 
-        return Mono.just(requestId.toHexString());
+        return result;
     }
 
 
@@ -202,5 +209,24 @@ public class CallBackService {
         httpStatusDocument.setCreateTime(new Date());
 
         return httpStatusDocument;
+    }
+
+    /**
+     * single 是否打开
+     * <br>默认打开， 默认返回 true
+     * <br>配置 on， 返回 true
+     * <br>配置 off， 返回 false
+     * @param
+     * @author YellowTail
+     * @since 2020-09-26
+     */
+    private boolean isSingleTurnOn() {
+        String value = System.getenv().get(WarmUpConstants.Flag.Single.getValue());
+
+        if (StringUtils.isBlank(value)) {
+            return true;
+        }
+
+        return WarmUpConstants.FlagValue.On.getValue().equals(value);
     }
 }

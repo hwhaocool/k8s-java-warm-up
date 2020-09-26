@@ -69,8 +69,6 @@ public class CallBackService {
 
     private void sendOneByOne(final WarmUpRequest request, final List<URI> uriList, final int index, final ObjectId requestId) {
 
-        LOGGER.info("sendOneByOne current index {}", index);
-
         // 检查 pod 状态是否 ready， 如果是就停止
         // 计算下次索引
         // 构造 请求
@@ -83,6 +81,8 @@ public class CallBackService {
             LOGGER.info("pod {} is ready, stop", podIp);
             return;
         }
+
+        LOGGER.info("sendOneByOne podIp {}, current index {}", podIp, index);
 
         // 2. 计算下次 index
         int nextIndex = genIndex(uriList, index);

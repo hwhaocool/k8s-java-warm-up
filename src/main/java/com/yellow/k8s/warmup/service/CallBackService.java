@@ -82,7 +82,7 @@ public class CallBackService {
             return;
         }
 
-        LOGGER.info("sendOneByOne podIp {}, current index {}", podIp, index);
+        LOGGER.info("sendOneByOne podName {}, podIp {}, current index {}", request.getPodName(), podIp, index);
 
         // 2. 计算下次 index
         int nextIndex = genIndex(uriList, index);
@@ -107,7 +107,7 @@ public class CallBackService {
                 .retrieve()
                 .toBodilessEntity()
                 .elapsed()
-                .doOnNext(tuple -> saveCost2Db(uri, podIp, tuple.getT1(), requestId))                                         // 耗时
+                .doOnNext(tuple -> saveCost2Db(uri, podIp, tuple.getT1(), requestId, index))                                         // 耗时
                 .map(Tuple2::getT2)
                 .subscribe( k -> sendOneByOne(request, uriList, nextIndex, requestId))                                 // 递归调用， one by one
         ;
@@ -159,9 +159,9 @@ public class CallBackService {
                 .collect(Collectors.toList());
     }
 
-    private void saveCost2Db(final URI uri, final String podIp, final Long cost, final ObjectId requestId) {
+    private void saveCost2Db(final URI uri, final String podIp, final Long cost, final ObjectId requestId, final int index) {
 
-        LOGGER.info("saveCost2Db, uir {}, podIp {}, cost {}", uri, podIp, cost);
+        LOGGER.info("saveCost2Db, uir {}, podIp {}, index {}, cost {}", uri, podIp, index, cost);
 
         HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
 

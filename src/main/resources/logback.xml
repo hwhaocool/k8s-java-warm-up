@@ -6,7 +6,7 @@
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>{PATTERN}</pattern>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5level [%thread] %c{50}%L : %msg%n</pattern>
             <charset class="java.nio.charset.Charset">UTF-8</charset>
         </encoder>
     </appender>

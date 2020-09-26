@@ -50,7 +50,7 @@ public class Domain2VoUtils {
         
         Option option = genEmptyOption();
         
-        option.title("hahah");
+        option.title("Http-Cost");
         
         //x 横轴：时间
         List<String> dateStrList = getSortedDateList(list).stream()

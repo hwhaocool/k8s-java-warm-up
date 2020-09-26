@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+
+    <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <link  rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/datatables/1.10.21/css/jquery.dataTables.min.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.bootcdn.net/ajax/libs/datatables/1.10.21/js/jquery.dataTables.min.js"></script>
+
+    <script type="text/javascript" src="top.js"></script>
+
+    <style>
+	h1 {color:#E215C3;}
+	</style>
+	
+</head>
+
+<body>
+    
+    <div id="backend" style="width: 300px;height:100px;float:left;">
+        <h1>Warm Up</h1>
+    </div>
+
+    <table id="myTable"  class="display" style="width:100%">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Ip</th>
+            <th>创建时间</th>
+
+        </tr>
+        </thead>
+
+    </table>
+
+
+    <script type="text/javascript">
+
+        $(document).ready( function () {
+
+            $('#myTable').DataTable({
+                ajax: {
+                    "url": '/api/warmup/monitor/list',
+                    "dataSrc": ""
+                },
+                "columns": [
+                    { "data": "_id" },
+                    { "data": "podName" },
+                    { "data": "ip" },
+                    { "data": "createTime" }
+
+                ],
+                "columnDefs": [ {
+                    "targets": 0,
+
+                    "render": function ( data, type, row, meta ) {
+                      return '<a href=show.html?id=' + data + '>Info</a>';
+                    }
+                  } ]
+            });
+        } );
+
+
+
+    </script>
+
+    </script>
+    
+    
+</body>
+</html>

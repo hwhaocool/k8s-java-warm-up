@@ -59,14 +59,14 @@ public class CallBackService {
             return result;
         }
 
-        // 2. 生成 uri 列表
+        // 3. 生成 uri 列表
         final List<URI> uriList = genUri(request);
 
-        // 3. 保存请求信息
+        // 4. 保存请求信息
         requestRepository.save(genRequestDoc(request, requestId))
             .subscribe();
 
-        // 4. 发送
+        // 5. 发送
         sendOneByOne(request, uriList, 0, requestId);
 
         return result;

@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,9 +49,10 @@ public class Domain2VoUtils {
 
         LOGGER.info("Domain2VoUtils stack list size {}", list.size());
         
+        String podName = requestDocument.getPodName();
+
         Option option = genEmptyOption();
-        
-        option.title("Http-Cost");
+        option.title(String.format("%s %s", podName, "Http-Cost"));
         
         //x 横轴：时间
         List<String> dateStrList = getSortedDateList(list).stream()
@@ -62,10 +64,12 @@ public class Domain2VoUtils {
         option.xAxis(axis);
         
         // y 轴 名称列表
-        String podName = requestDocument.getPodName();
-        List<String> podNameList = List.of(podName);
-        
-        option.legend().data(podNameList);
+        List<String> collect = list.stream()
+                .map(HttpStatusDocument::getDesc)
+                .distinct()
+                .collect(Collectors.toList());
+
+        option.legend().data(collect);
         
         option.series(docList2SeriesList(podName, list));
         
@@ -79,25 +83,34 @@ public class Domain2VoUtils {
         List<Date> dateList = getSortedDateList(list);
 
         // y 轴
-        List<Series> collect = List.of(doc2Line(podName, list));
-        
+
+        // 根据 desc 分组
+        // 使用LinkedHashMap ， 维持顺序
+        LinkedHashMap<String, List<HttpStatusDocument>> map = getSortedStream(list)
+                .collect(Collectors.groupingBy(HttpStatusDocument::getDesc, LinkedHashMap::new, Collectors.toList()));
+
+        List<Series> collect = map.entrySet()
+                .stream()
+                .map(k -> doc2Line(k.getKey(), k.getValue()))
+                .collect(Collectors.toList());
+
         return collect;
     }
     
     /**
      * <br> 每个 实际的 pod 记录列表 转成 line
      *
-     * @param podName 名称
+     * @param desc 名称
      * @param list  pod 记录列表
      * @return
      * @author YellowTail
      * @since 2019-11-19
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static Series doc2Line(String podName, List<HttpStatusDocument> list) {
+    private static Series doc2Line(String desc, List<HttpStatusDocument> list) {
         Line line = new Line();
         
-        line.name(podName);
+        line.name(desc);
 
         //生成固定长度的 data 数组,
         List<Integer> dataList = list.stream()

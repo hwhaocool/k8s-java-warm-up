@@ -20,17 +20,19 @@ public class RequestDocument {
 
     private String ip;
 
-    private int port;                           //端口
-    private String method;                      //方法
-    private String uri;                         //uri， 其它查询参数，需自行组装好
+    private int port;                                //端口
+    private String method;                              //方法
 
-    private String headers;                      // headers
+    private String type;                                // single/multi
 
-    private List<String> paramList;             //参数值列表，比如 xxId列表
+    private String uri;                                 // uri, type=single
+    private List<String> uriList;                        // uri列表， type=multi
 
-    private String queryParamName;              //查询参数名称，比如为 id，那么 最后的参数为 uri&id={paramList[i]}
+    private String headers;                              // headers
 
-    private Date createTime;                    // 创建时间
+    private SingleRequestParam singleRequestParam;       // 参数， type=single
+
+    private Date createTime;                              // 创建时间
 
     public String get_id() {
         return _id;
@@ -88,20 +90,12 @@ public class RequestDocument {
         this.headers = headers;
     }
 
-    public List<String> getParamList() {
-        return paramList;
+    public final SingleRequestParam getSingleRequestParam() {
+        return singleRequestParam;
     }
 
-    public void setParamList(List<String> paramList) {
-        this.paramList = paramList;
-    }
-
-    public String getQueryParamName() {
-        return queryParamName;
-    }
-
-    public void setQueryParamName(String queryParamName) {
-        this.queryParamName = queryParamName;
+    public final void setSingleRequestParam(final SingleRequestParam singleRequestParam) {
+        this.singleRequestParam = singleRequestParam;
     }
 
     public Date getCreateTime() {
@@ -112,6 +106,22 @@ public class RequestDocument {
         this.createTime = createTime;
     }
 
+    public final String getType() {
+        return type;
+    }
+
+    public final void setType(final String type) {
+        this.type = type;
+    }
+
+    public final List<String> getUriList() {
+        return uriList;
+    }
+
+    public final void setUriList(final List<String> uriList) {
+        this.uriList = uriList;
+    }
+
     @Override
     public String toString() {
         return "RequestDocument{" +
@@ -120,10 +130,10 @@ public class RequestDocument {
                 ", ip='" + ip + '\'' +
                 ", port=" + port +
                 ", method='" + method + '\'' +
+                ", type='" + type + '\'' +
                 ", uri='" + uri + '\'' +
+                ", uriList=" + uriList +
                 ", headers='" + headers + '\'' +
-                ", paramList=" + paramList +
-                ", queryParamName='" + queryParamName + '\'' +
                 ", createTime=" + createTime +
                 '}';
     }

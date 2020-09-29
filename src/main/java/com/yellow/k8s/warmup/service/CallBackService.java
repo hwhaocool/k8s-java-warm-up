@@ -5,6 +5,9 @@ import com.yellow.k8s.warmup.dao.HttpStatusRepository;
 import com.yellow.k8s.warmup.dao.RequestRepository;
 import com.yellow.k8s.warmup.dbdoc.HttpStatusDocument;
 import com.yellow.k8s.warmup.dbdoc.RequestDocument;
+import com.yellow.k8s.warmup.dbdoc.SingleRequestParam;
+import com.yellow.k8s.warmup.vo.BaseRequest;
+import com.yellow.k8s.warmup.vo.WarmUpBatchRequest;
 import com.yellow.k8s.warmup.vo.WarmUpRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -73,9 +76,38 @@ public class CallBackService {
         return result;
     }
 
+    public Mono<String> multi(WarmUpBatchRequest request) {
+        // 1. 生成 请求id
+        final ObjectId requestId = ObjectId.get();
+
+        Mono<String> result = Mono.just(requestId.toHexString());
+
+        // 2. 开关， 环境变量： warm-up-single: on/off, 可以关闭，以便对比效果
+        if (! isMultiTurnOn()) {
+            LOGGER.info("CallBackService multi trun off, will not send request {}", request);
+            return result;
+        }
+
+        // 3. 生成 uri 列表
+        final List<URI> uriList = genUri(request);
+
+        // 4. 保存请求信息
+        requestRepository.save(genRequestDoc(request, requestId))
+                .subscribe();
+
+        // 5. 发送, url 列表长度为队列数量，每一列都是 一个接一个
+        List<List<URI>> collect = uriList.stream()
+                .map(List::of)
+                .collect(Collectors.toList());
+
+        collect.forEach( k -> sendOneByOne(request, k, 0, requestId));
+
+        return result;
+    }
 
 
-    private void sendOneByOne(final WarmUpRequest request, final List<URI> uriList, final int index, final ObjectId requestId) {
+
+    private void sendOneByOne(final BaseRequest request, final List<URI> uriList, final int index, final ObjectId requestId) {
 
         // 检查 pod 状态是否 ready， 如果是就停止
         // 计算下次索引
@@ -121,13 +153,6 @@ public class CallBackService {
         ;
     }
 
-    public Mono<String> multi(WarmUpRequest request) {
-        ObjectId objectId = ObjectId.get();
-
-
-        return Mono.just(objectId.toHexString());
-    }
-
     private int genIndex(List<URI> uriList, int index) {
 
         return index + 1 >= uriList.size() ? 0 : index + 1;
@@ -167,17 +192,71 @@ public class CallBackService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 生成 uri 列表
+     * @param request
+     * @author YellowTail
+     * @since 2020-06-16
+     */
+    private List<URI> genUri(WarmUpBatchRequest request) {
+
+        List<String> uriList = request.getUriList();
+        if (CollectionUtils.isEmpty(uriList)) {
+            return List.of();
+        }
+
+        return uriList.stream()
+                .map(k ->
+                        new DefaultUriBuilderFactory()
+                                .builder()
+                                .scheme("http")
+                                .host(request.getIp())
+                                .port(request.getPort())
+                                .path(k)
+                                .build()
+                ).collect(Collectors.toList());
+    }
+
     private void saveCost2Db(final URI uri, final String podIp, final Long cost, final ObjectId requestId, final int index) {
 
         LOGGER.info("saveCost2Db, uir {}, podIp {}, index {}, cost {}", uri, podIp, index, cost);
 
         HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
 
-        httpStatusRepository.save(genRequestDoc(podIp, cost, requestId))
+        httpStatusRepository.save(genRequestDoc(uri, cost, requestId))
                 .subscribe();
     }
 
     private RequestDocument genRequestDoc(final WarmUpRequest request, final ObjectId requestId) {
+        String type = WarmUpConstants.RequestType.Single.getValue();
+
+        SingleRequestParam singleRequestParam = new SingleRequestParam();
+        singleRequestParam.setQueryParamName(request.getQueryParamName());
+        singleRequestParam.setParamList(request.getParamList());
+
+        RequestDocument requestDocument = genCommonDocument(request, requestId);
+
+        // 不一样的字段
+        requestDocument.setUri(request.getUri());
+        requestDocument.setType(type);
+        requestDocument.setSingleRequestParam(singleRequestParam);
+
+        return requestDocument;
+    }
+
+    private RequestDocument genRequestDoc(final WarmUpBatchRequest request, final ObjectId requestId) {
+        String type = WarmUpConstants.RequestType.Multi.getValue();
+
+        RequestDocument requestDocument = genCommonDocument(request, requestId);
+
+        // 不一样的字段
+        requestDocument.setUriList(request.getUriList());
+        requestDocument.setType(type);
+
+        return requestDocument;
+    }
+
+    private RequestDocument genCommonDocument(final BaseRequest request, final ObjectId requestId) {
         RequestDocument requestDocument = new RequestDocument();
 
         requestDocument.set_id(requestId.toHexString());
@@ -189,9 +268,6 @@ public class CallBackService {
 
         requestDocument.setCreateTime(new Date());
 
-        requestDocument.setQueryParamName(request.getQueryParamName());
-        requestDocument.setParamList(request.getParamList());
-
         Map<String, String> headers = request.getHeaders();
         if (MapUtils.isNotEmpty(headers)) {
             requestDocument.setHeaders(headers.toString());
@@ -200,7 +276,7 @@ public class CallBackService {
         return requestDocument;
     }
 
-    private HttpStatusDocument genRequestDoc(final String podIp, final Long cost, final ObjectId requestId) {
+    private HttpStatusDocument genRequestDoc(final URI uri, final Long cost, final ObjectId requestId) {
         HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
 
         httpStatusDocument.setRequestId(requestId.toHexString());
@@ -208,6 +284,8 @@ public class CallBackService {
         httpStatusDocument.setCost(null == cost ? 0 : (int)(long) cost);
 
         httpStatusDocument.setCreateTime(new Date());
+
+        httpStatusDocument.setDesc(uri.getPath());
 
         return httpStatusDocument;
     }
@@ -223,6 +301,25 @@ public class CallBackService {
      */
     private boolean isSingleTurnOn() {
         String value = System.getenv().get(WarmUpConstants.Flag.Single.getValue());
+
+        if (StringUtils.isBlank(value)) {
+            return true;
+        }
+
+        return WarmUpConstants.FlagValue.On.getValue().equals(value);
+    }
+
+    /**
+     * multi 是否打开
+     * <br>默认打开， 默认返回 true
+     * <br>配置 on， 返回 true
+     * <br>配置 off， 返回 false
+     * @param
+     * @author YellowTail
+     * @since 2020-09-26
+     */
+    private boolean isMultiTurnOn() {
+        String value = System.getenv().get(WarmUpConstants.Flag.Multi.getValue());
 
         if (StringUtils.isBlank(value)) {
             return true;

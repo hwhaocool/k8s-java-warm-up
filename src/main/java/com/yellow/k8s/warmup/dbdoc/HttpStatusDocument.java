@@ -24,8 +24,9 @@ public class HttpStatusDocument {
 
     private int cost;                           // 响应时间
 
-    private Date createTime;                    // 创建时间
+    private String desc ;                        // 描述
 
+    private Date createTime;                    // 创建时间
 
     public String get_id() {
         return _id;
@@ -67,12 +68,22 @@ public class HttpStatusDocument {
         this.createTime = createTime;
     }
 
+    public final String getDesc() {
+        return desc;
+    }
+
+    public final void setDesc(final String desc) {
+        this.desc = desc;
+    }
+
     @Override
     public String toString() {
         return "HttpStatusDocument{" +
                 "_id='" + _id + '\'' +
                 ", requestId='" + requestId + '\'' +
+                ", requestObjectId=" + requestObjectId +
                 ", cost=" + cost +
+                ", desc='" + desc + '\'' +
                 ", createTime=" + createTime +
                 '}';
     }

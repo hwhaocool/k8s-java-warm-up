@@ -76,7 +76,6 @@ public class MonitorService {
 
         Mono<String> stringMono = documentMono.map(RequestDocument::get_id);
 
-
         Flux<HttpStatusDocument> list = httpStatusRepository.getList(stringMono);
 
         return Domain2VoUtils.onePodTopStack(documentMono, list);

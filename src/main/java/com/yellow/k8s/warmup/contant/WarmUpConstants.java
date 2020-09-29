@@ -31,4 +31,19 @@ public class WarmUpConstants {
             return value;
         }
     }
+
+    public enum RequestType {
+        Single("single"),
+        Multi("multi"),
+        ;
+        private String value;
+
+        RequestType(final String value) {
+            this.value = value;
+        }
+
+        public final String getValue() {
+            return value;
+        }
+    }
 }

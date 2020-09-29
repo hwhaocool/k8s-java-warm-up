@@ -6,7 +6,7 @@
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>{PATTERN}</pattern>
+            <pattern>${PATTERN}</pattern>
             <charset class="java.nio.charset.Charset">UTF-8</charset>
         </encoder>
     </appender>
@@ -15,7 +15,7 @@
         <File>logs/warmup.log</File>
         <Append>true</Append>
         <encoder>
-            <pattern>{PATTERN}</pattern>
+            <pattern>${PATTERN}</pattern>
             <charset class="java.nio.charset.Charset">UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">

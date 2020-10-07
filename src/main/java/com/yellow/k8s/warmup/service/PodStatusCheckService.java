@@ -60,11 +60,11 @@ public class PodStatusCheckService implements InitializingBean {
         if (ready) {
             long gap = System.currentTimeMillis() - ifPresent.getStartTime();
 
-            String seconds = String.format("%.2f", (double)( gap / 1000));
+            String seconds = String.format("%.2f", (double) gap / 1000);
             LOGGER.info("pod {} have been warm up {} ms,  {} s", ip, gap, seconds);
         }
 
-        return ifPresent.isReady();
+        return ready;
     }
 
     private void initCache() {

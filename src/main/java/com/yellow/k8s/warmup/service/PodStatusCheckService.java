@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.yellow.k8s.warmup.model.ContainerStatus;
 import com.yellow.k8s.warmup.model.PodEvent;
 import com.yellow.k8s.warmup.model.PodInfo;
+import com.yellow.k8s.warmup.model.WarmUpInfo;
 import com.yellow.k8s.warmup.utils.Null;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +37,7 @@ public class PodStatusCheckService implements InitializingBean {
     @Qualifier("k8sClient")
     private WebClient webClient;
 
-    private Cache<String, Boolean> cache;
+    private Cache<String, WarmUpInfo> cache;
 
     public void afterPropertiesSet() throws Exception {
 
@@ -47,10 +48,23 @@ public class PodStatusCheckService implements InitializingBean {
 
     public boolean isPodReady(String ip) {
 
-        Boolean ifPresent = cache.getIfPresent(ip);
+        WarmUpInfo ifPresent = cache.getIfPresent(ip);
 
         // 存在且为 true， 才 返回 true
-        return Boolean.TRUE.equals(ifPresent);
+        if (null == ifPresent) {
+            return false;
+        }
+
+        boolean ready = ifPresent.isReady();
+
+        if (ready) {
+            long gap = System.currentTimeMillis() - ifPresent.getStartTime();
+
+            String seconds = String.format("%.2f", (double)( gap / 1000));
+            LOGGER.info("pod {} have been warm up {} ms,  {} s", ip, gap, seconds);
+        }
+
+        return ifPresent.isReady();
     }
 
     private void initCache() {
@@ -128,7 +142,10 @@ public class PodStatusCheckService implements InitializingBean {
             return;
         }
 
-        cache.put(podIP, false);
+        WarmUpInfo ifPresent = cache.getIfPresent(podIP);
+        if (null == ifPresent) {
+            cache.put(podIP, new WarmUpInfo(System.currentTimeMillis()));
+        }
 
         String name = Null.of(() -> podInfo.getStatus().getContainerStatuses().get(0).getName());
         LOGGER.info("findAddEvent name {}, ip {}", name, podIP);
@@ -144,7 +161,13 @@ public class PodStatusCheckService implements InitializingBean {
         if (ready) {
             // 已就绪，状态更新为 true
             String podIP = podInfo.getStatus().getPodIP();
-            cache.put(podIP, true);
+
+            WarmUpInfo ifPresent = cache.getIfPresent(podIP);
+            if (null == ifPresent) {
+                cache.put(podIP, new WarmUpInfo(true, System.currentTimeMillis()));
+            } else {
+                ifPresent.setReady(true);
+            }
 
             String name = Null.of(() -> containerStatuses.get(0).getName());
             LOGGER.info("findUpdateEvent, pod_is_ready, name {}, ip {}", name, podIP);

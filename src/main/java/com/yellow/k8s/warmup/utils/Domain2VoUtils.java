@@ -9,16 +9,19 @@ import com.github.abel533.echarts.series.Line;
 import com.github.abel533.echarts.series.Series;
 import com.yellow.k8s.warmup.dbdoc.HttpStatusDocument;
 import com.yellow.k8s.warmup.dbdoc.RequestDocument;
+import com.yellow.k8s.warmup.echarts.EchartsLine;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,6 +60,7 @@ public class Domain2VoUtils {
         //x 横轴：时间
         List<String> dateStrList = getSortedDateList(list).stream()
             .map(Domain2VoUtils::date2String)
+            .distinct()
             .collect(Collectors.toList());
         
         CategoryAxis axis = new CategoryAxis();
@@ -70,17 +74,17 @@ public class Domain2VoUtils {
                 .collect(Collectors.toList());
 
         option.legend().data(collect);
-        
-        option.series(docList2SeriesList(podName, list));
+
+        List<Date> dateList = getSortedDateList(list);
+
+        option.series(docList2SeriesList(podName, list, dateList));
         
         return option;
     }
     
     
     @SuppressWarnings("rawtypes")
-    private static List<Series> docList2SeriesList(String podName, List<HttpStatusDocument> list) {
-        //x 轴
-        List<Date> dateList = getSortedDateList(list);
+    private static List<Series> docList2SeriesList(String podName, List<HttpStatusDocument> list, List<Date> dateList) {
 
         // y 轴
 
@@ -91,7 +95,7 @@ public class Domain2VoUtils {
 
         List<Series> collect = map.entrySet()
                 .stream()
-                .map(k -> doc2Line(k.getKey(), k.getValue()))
+                .map(k -> doc2Line(k.getKey(), k.getValue(), dateList))
                 .collect(Collectors.toList());
 
         return collect;
@@ -102,24 +106,35 @@ public class Domain2VoUtils {
      *
      * @param desc 名称
      * @param list  pod 记录列表
+     * @param dateList
      * @return
      * @author YellowTail
      * @since 2019-11-19
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static Series doc2Line(String desc, List<HttpStatusDocument> list) {
-        Line line = new Line();
+    private static Series doc2Line(String desc, List<HttpStatusDocument> list, final List<Date> dateList) {
+        EchartsLine line = new EchartsLine();
         
         line.name(desc);
 
-        //生成固定长度的 data 数组,
-        List<Integer> dataList = list.stream()
-                .map(HttpStatusDocument::getCost)
-                .collect(Collectors.toList());
+        //生成固定长度的 data 数组
+        // 按照 x 轴 dateList 来生成数据， 没有的话，就设置为 null
+
+        //生成固定长度的 data 数组, 因为有些 时间点是没有数据的，部分数据是缺失的
+        List<Integer> dataList = new ArrayList<>(dateList.size());
+
+        //构造一个map
+        Map<Date, Integer> dateValueMap = list.stream()
+                .collect(Collectors.toMap(HttpStatusDocument::getCreateTime, HttpStatusDocument::getCost));
+
+        //遍历x 轴，按照x轴的时间逐个添加 data， 不存在的时候，添加 null
+        dateList.forEach(k -> dataList.add(dateValueMap.getOrDefault(k, null)));
 
         line.data().addAll(dataList);
         
         line.smooth(true);
+
+        line.setConnectNulls(true);
         
         return line;
     }
@@ -165,7 +180,7 @@ public class Domain2VoUtils {
     private static String date2String(Date date) {
         DateTime dateTime = new DateTime(date);
         
-        return dateTime.toString("MM-dd HH:mm:ss");
+        return dateTime.toString("MM-dd HH:mm:ss:SSS");
     }
     
     /**

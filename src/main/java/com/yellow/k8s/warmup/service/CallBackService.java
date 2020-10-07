@@ -82,7 +82,7 @@ public class CallBackService {
 
         Mono<String> result = Mono.just(requestId.toHexString());
 
-        // 2. 开关， 环境变量： warm-up-single: on/off, 可以关闭，以便对比效果
+        // 2. 开关， 环境变量： warm-up-multi: on/off, 可以关闭，以便对比效果
         if (! isMultiTurnOn()) {
             LOGGER.info("CallBackService multi trun off, will not send request {}", request);
             return result;

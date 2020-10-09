@@ -52,6 +52,12 @@ public class PodStatusCheckService implements InitializingBean {
 
         // 存在且为 true， 才 返回 true
         if (null == ifPresent) {
+
+            //不存在的时候，说明是第一次进来，此时也就是第一次预热，设置一下时间戳
+            cache.put(ip, new WarmUpInfo(System.currentTimeMillis()));
+
+            LOGGER.info("isPodReady, add_2_cache, ip {}", ip);
+
             return false;
         }
 
@@ -142,11 +148,6 @@ public class PodStatusCheckService implements InitializingBean {
             return;
         }
 
-        WarmUpInfo ifPresent = cache.getIfPresent(podIP);
-        if (null == ifPresent) {
-            cache.put(podIP, new WarmUpInfo(System.currentTimeMillis()));
-        }
-
         String name = Null.of(() -> podInfo.getStatus().getContainerStatuses().get(0).getName());
         LOGGER.info("findAddEvent name {}, ip {}", name, podIP);
     }
@@ -164,6 +165,8 @@ public class PodStatusCheckService implements InitializingBean {
 
             WarmUpInfo ifPresent = cache.getIfPresent(podIP);
             if (null == ifPresent) {
+                LOGGER.info("findUpdateEvent, pod_is_ready, add_2_cache, ip {}", podIP);
+
                 cache.put(podIP, new WarmUpInfo(true, System.currentTimeMillis()));
             } else {
                 ifPresent.setReady(true);

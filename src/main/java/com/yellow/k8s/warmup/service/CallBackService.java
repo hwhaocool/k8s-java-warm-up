@@ -144,12 +144,24 @@ public class CallBackService {
         URI uri = uriList.get(index);
 
         requester.uri(uri)
-                .retrieve()
-                .toBodilessEntity()
+                .exchange()
+//                .retrieve()
+//                .toBodilessEntity()
                 .elapsed()
                 .doOnNext(tuple -> saveCost2Db(uri, podIp, tuple.getT1(), requestId, index))                                         // 耗时
                 .map(Tuple2::getT2)
-                .subscribe( k -> sendOneByOne(request, uriList, nextIndex, requestId))                                 // 递归调用， one by one
+                .subscribe( clientResponse -> {
+
+                    if (clientResponse.statusCode().is5xxServerError() || clientResponse.statusCode().is4xxClientError()) {
+                        LOGGER.info("uri {}, status is {}", uri, clientResponse.statusCode().value());
+                    }
+
+                    clientResponse
+                            .releaseBody()
+                            .subscribe(k -> sendOneByOne(request, uriList, nextIndex, requestId));              // 递归调用， one by one
+
+
+                })
         ;
     }
 

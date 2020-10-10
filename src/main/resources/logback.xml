@@ -19,7 +19,7 @@
             <charset class="java.nio.charset.Charset">UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/web.log.%d{yyyy-MM-dd_HH}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/warmup.log.%d{yyyy-MM-dd_HH}.%i.log</fileNamePattern>
             <!-- 每个文件最大 100M ，最多保留1小时，但是总的大小不超过200MB -->
             <maxFileSize>100MB</maxFileSize>
             <maxHistory>1</maxHistory>

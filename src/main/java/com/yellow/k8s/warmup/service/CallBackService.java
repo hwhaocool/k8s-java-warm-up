@@ -155,7 +155,8 @@ public class CallBackService {
                     }
 
                     clientResponse
-                            .releaseBody()
+                            .toBodilessEntity()
+//                            .releaseBody()
                             .subscribe(k -> sendOneByOne(request, uriList, nextIndex, requestId));              // 递归调用， one by one
 
 

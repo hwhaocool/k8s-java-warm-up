@@ -145,8 +145,6 @@ public class CallBackService {
 
         requester.uri(uri)
                 .exchange()
-//                .retrieve()
-//                .toBodilessEntity()
                 .elapsed()
                 .doOnNext(tuple -> saveCost2Db(uri, podIp, tuple.getT1(), requestId, index))                                         // 耗时
                 .map(Tuple2::getT2)
@@ -233,10 +231,8 @@ public class CallBackService {
 
         LOGGER.info("saveCost2Db, uir {}, podIp {}, index {}, cost {}", uri, podIp, index, cost);
 
-        HttpStatusDocument httpStatusDocument = new HttpStatusDocument();
-
-        httpStatusRepository.save(genRequestDoc(uri, cost, requestId))
-                .subscribe();
+//        httpStatusRepository.save(genRequestDoc(uri, cost, requestId))
+//                .subscribe();
     }
 
     private RequestDocument genRequestDoc(final WarmUpRequest request, final ObjectId requestId) {

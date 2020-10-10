@@ -56,7 +56,7 @@ public class PodStatusCheckService implements InitializingBean {
             //不存在的时候，说明是第一次进来，此时也就是第一次预热，设置一下时间戳
             cache.put(ip, new WarmUpInfo(System.currentTimeMillis()));
 
-            LOGGER.info("isPodReady, add_2_cache, ip {}", ip);
+            LOGGER.info("isPodReady, first_check add_2_cache, ip {}", ip);
 
             return false;
         }
@@ -68,6 +68,8 @@ public class PodStatusCheckService implements InitializingBean {
 
             String seconds = String.format("%.2f", (double) gap / 1000);
             LOGGER.info("pod {} have been warm up {} ms,  {} s", ip, gap, seconds);
+        } else {
+            // 不 ready 的时候， 看下
         }
 
         return ready;
@@ -153,29 +155,36 @@ public class PodStatusCheckService implements InitializingBean {
     }
 
     private void findUpdateEvent(PodInfo podInfo) {
+
+        String podIP = Null.of(() -> podInfo.getStatus().getPodIP());
+        if (StringUtils.isBlank(podIP)) {
+            return;
+        }
+
         List<ContainerStatus> containerStatuses = podInfo.getStatus().getContainerStatuses();
         if (CollectionUtils.isEmpty(containerStatuses)) {
             return;
         }
 
+        WarmUpInfo ifPresent = cache.getIfPresent(podIP);
+
+        if (null == ifPresent) {
+            ifPresent = new WarmUpInfo();
+        } else {
+            ifPresent.setEventUpdateTime(System.currentTimeMillis());
+        }
+
         boolean ready = containerStatuses.get(0).isReady();
         if (ready) {
             // 已就绪，状态更新为 true
-            String podIP = podInfo.getStatus().getPodIP();
 
-            WarmUpInfo ifPresent = cache.getIfPresent(podIP);
-            if (null == ifPresent) {
-                LOGGER.info("findUpdateEvent, pod_is_ready, add_2_cache, ip {}", podIP);
-
-                cache.put(podIP, new WarmUpInfo(true, System.currentTimeMillis()));
-            } else {
-                ifPresent.setReady(true);
-            }
+            ifPresent.setReady(true);
 
             String name = Null.of(() -> containerStatuses.get(0).getName());
             LOGGER.info("findUpdateEvent, pod_is_ready, name {}, ip {}", name, podIP);
         }
 
+        cache.put(podIP, ifPresent);
     }
 
     private void findDelEvent(PodInfo podInfo) {

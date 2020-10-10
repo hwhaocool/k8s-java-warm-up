@@ -10,6 +10,10 @@ public class WarmUpInfo {
 
     private long startTime;
 
+    public WarmUpInfo() {
+        ready = false;
+    }
+
     public WarmUpInfo(final long startTime) {
         ready = false;
         this.startTime = startTime;

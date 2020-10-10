@@ -169,9 +169,7 @@ public class PodStatusCheckService implements InitializingBean {
         WarmUpInfo ifPresent = cache.getIfPresent(podIP);
 
         if (null == ifPresent) {
-            ifPresent = new WarmUpInfo();
-        } else {
-            ifPresent.setEventUpdateTime(System.currentTimeMillis());
+            ifPresent = new WarmUpInfo(System.currentTimeMillis());
         }
 
         boolean ready = containerStatuses.get(0).isReady();

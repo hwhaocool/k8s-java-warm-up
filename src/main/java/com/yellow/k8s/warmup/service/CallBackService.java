@@ -40,7 +40,7 @@ public class CallBackService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CallBackService.class);
 
     @Autowired
-    @Qualifier("k8sClient")
+    @Qualifier("restClient")
     private WebClient webClient;
 
     @Autowired

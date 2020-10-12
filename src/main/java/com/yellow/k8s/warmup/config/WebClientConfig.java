@@ -61,11 +61,11 @@ public class WebClientConfig {
                     .trustManager(InsecureTrustManagerFactory.INSTANCE) 
                     .build();
             
-            ClientHttpConnector httpConnector = 
-                    new ReactorClientHttpConnector(resourceFactory() , 
-                            opt -> opt.secure(t -> t.sslContext(sslContext)));
-            
-            builder.clientConnector(httpConnector);
+//            ClientHttpConnector httpConnector =
+//                    new ReactorClientHttpConnector(resourceFactory() ,
+//                            opt -> opt.secure(t -> t.sslContext(sslContext)));
+//
+//            builder.clientConnector(httpConnector);
             
         } catch (SSLException e) {
             LOGGER.error("SSLException, ", e);
@@ -77,7 +77,34 @@ public class WebClientConfig {
                 .baseUrl(masterUrl)
                 .build();
     }
-    
+
+    @Bean(name = "restClient")
+    public WebClient restClient() {
+
+        Builder builder = WebClient.builder();
+
+        try {
+            SslContext sslContext = SslContextBuilder
+                    .forClient()
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .build();
+
+            ClientHttpConnector httpConnector =
+                    new ReactorClientHttpConnector(resourceFactory() ,
+                            opt -> opt.secure(t -> t.sslContext(sslContext)));
+
+            builder.clientConnector(httpConnector);
+
+        } catch (SSLException e) {
+            LOGGER.error("SSLException, ", e);
+        }
+
+        return builder
+                .defaultHeader("Authorization", String.format("Bearer %s", token))
+                .baseUrl(masterUrl)
+                .build();
+    }
+
     
 
 }

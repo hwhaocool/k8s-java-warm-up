@@ -76,7 +76,7 @@ public class PodStatusCheckService implements InitializingBean {
 
                 LOGGER.warn("pod {} have been warm up {} ms, exceed the threshold", ip, gap);
 
-                return false;
+                return true;
             }
         }
 
@@ -85,7 +85,7 @@ public class PodStatusCheckService implements InitializingBean {
 
     private void initCache() {
         cache = Caffeine.newBuilder()
-                .initialCapacity(20)                                         //初始大小
+                .initialCapacity(200)                                         //初始大小
                 .expireAfterWrite(10, TimeUnit.MINUTES)              //过期时间, 写入10分钟后过期
                 .build();
     }

@@ -132,7 +132,10 @@ public class PodStatusCheckService implements InitializingBean {
                 .retrieve()
                 .bodyToFlux(PodEvent.class)
                 .doOnCancel(() -> LOGGER.info("bad_response cancel"))
-                .doOnTerminate(() -> LOGGER.info("bad_response Terminate"))
+                .doOnTerminate(() -> {
+                    LOGGER.info("bad_response Terminate, watch again");
+                    watch();
+                })
                 .doOnError(this::onError)
                 .subscribe(this::onEvent);
 
@@ -242,7 +245,7 @@ public class PodStatusCheckService implements InitializingBean {
      * @since 2019-11-19
      */
     private void onError(Throwable k) {
-        LOGGER.error("request k8s api-server occur exception, ", k);
+        LOGGER.error("bad_response, request k8s api-server occur exception, ", k);
     }
 
     private void insert2Cache(String podIp, String from) {

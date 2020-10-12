@@ -17,6 +17,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import reactor.netty.resources.ConnectionProvider;
+import reactor.netty.resources.LoopResources;
 
 @Configuration
 @ConfigurationProperties(prefix = "k8s")
@@ -60,6 +61,7 @@ public class WebClientConfig {
 
             ReactorResourceFactory factory = new ReactorResourceFactory();
             factory.setConnectionProvider(ConnectionProvider.create("webflux-k8s", 5));
+            factory.setLoopResources(LoopResources.create("webflux-k8s"));
             factory.setUseGlobalResources(false);
 
             SslContext sslContext = SslContextBuilder 

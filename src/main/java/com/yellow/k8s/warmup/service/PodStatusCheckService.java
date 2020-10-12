@@ -33,6 +33,8 @@ public class PodStatusCheckService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PodStatusCheckService.class);
 
+    private static final int WARM_UP_THRESHOLD = 60 * 1000;
+
     @Autowired
     @Qualifier("k8sClient")
     private WebClient webClient;
@@ -63,13 +65,20 @@ public class PodStatusCheckService implements InitializingBean {
 
         boolean ready = ifPresent.isReady();
 
-        if (ready) {
-            long gap = System.currentTimeMillis() - ifPresent.getStartTime();
+        long gap = System.currentTimeMillis() - ifPresent.getStartTime();
 
+        if (ready) {
             String seconds = String.format("%.2f", (double) gap / 1000);
             LOGGER.info("pod {} have been warm up {} ms,  {} s", ip, gap, seconds);
         } else {
-            // 不 ready 的时候， 看下
+            // 不 ready 的时候， 看下 是否超过阈值 60秒
+
+            if (gap > WARM_UP_THRESHOLD) {
+
+                LOGGER.warn("pod {} have been warm up {} ms, exceed the threshold", ip, gap);
+
+                return false;
+            }
         }
 
         return ready;

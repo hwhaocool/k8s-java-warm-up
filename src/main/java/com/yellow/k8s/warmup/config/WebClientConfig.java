@@ -16,6 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient.Builder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import reactor.netty.resources.ConnectionProvider;
 
 @Configuration
 @ConfigurationProperties(prefix = "k8s")
@@ -46,7 +47,7 @@ public class WebClientConfig {
     @Bean
     public ReactorResourceFactory resourceFactory() {
         ReactorResourceFactory factory = new ReactorResourceFactory();
-        factory.setUseGlobalResources(false); 
+        factory.setUseGlobalResources(false);
         return factory;
     }
     
@@ -56,16 +57,21 @@ public class WebClientConfig {
         Builder builder = WebClient.builder();
         
         try {
+
+            ReactorResourceFactory factory = new ReactorResourceFactory();
+            factory.setConnectionProvider(ConnectionProvider.create("webflux-k8s", 5));
+            factory.setUseGlobalResources(false);
+
             SslContext sslContext = SslContextBuilder 
                     .forClient() 
                     .trustManager(InsecureTrustManagerFactory.INSTANCE) 
                     .build();
             
-//            ClientHttpConnector httpConnector =
-//                    new ReactorClientHttpConnector(resourceFactory() ,
-//                            opt -> opt.secure(t -> t.sslContext(sslContext)));
-//
-//            builder.clientConnector(httpConnector);
+            ClientHttpConnector httpConnector =
+                    new ReactorClientHttpConnector(factory ,
+                            opt -> opt.secure(t -> t.sslContext(sslContext)));
+
+            builder.clientConnector(httpConnector);
             
         } catch (SSLException e) {
             LOGGER.error("SSLException, ", e);
@@ -100,8 +106,6 @@ public class WebClientConfig {
         }
 
         return builder
-                .defaultHeader("Authorization", String.format("Bearer %s", token))
-                .baseUrl(masterUrl)
                 .build();
     }
 

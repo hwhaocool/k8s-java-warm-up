@@ -103,29 +103,39 @@ public class PodStatusCheckService implements InitializingBean {
 
         // /api/v1/pods watch 所有 命名空间的pod， 排除一下已知的，如 kube-system istio等
 
+//         webClient.get()
+//                .uri("/api/v1/pods?watch=true")
+//                .accept(MediaType.ALL)
+//                .exchange()
+//                .doOnError(this::onError)
+//                .doOnCancel(() -> LOGGER.info("bad_response cancel"))
+//                .doOnTerminate(() -> LOGGER.info("bad_response Terminate"))
+//                .subscribe(clientResponse -> {
+//                    if (clientResponse.statusCode().is5xxServerError() || clientResponse.statusCode().is4xxClientError()) {
+//                        LOGGER.info("watch bad_response status code is {}", clientResponse.statusCode());
+//
+//                        clientResponse.bodyToMono(String.class)
+//                            .subscribe(k -> LOGGER.info("bad_response {}", k));
+//                    } else {
+//
+//                        //正常时的处理
+//
+//                        clientResponse.bodyToFlux(PodEvent.class)
+//                                .doOnError(this::onError)
+//                                .subscribe(this::onEvent);
+//                    }
+//
+//                });
+
          webClient.get()
                 .uri("/api/v1/pods?watch=true")
                 .accept(MediaType.ALL)
-                .exchange()
-                .doOnError(this::onError)
+                .retrieve()
+                .bodyToFlux(PodEvent.class)
                 .doOnCancel(() -> LOGGER.info("bad_response cancel"))
                 .doOnTerminate(() -> LOGGER.info("bad_response Terminate"))
-                .subscribe(clientResponse -> {
-                    if (clientResponse.statusCode().is5xxServerError() || clientResponse.statusCode().is4xxClientError()) {
-                        LOGGER.info("watch bad_response status code is {}", clientResponse.statusCode());
-
-                        clientResponse.bodyToMono(String.class)
-                            .subscribe(k -> LOGGER.info("bad_response {}", k));
-                    } else {
-
-                        //正常时的处理
-
-                        clientResponse.bodyToFlux(PodEvent.class)
-                                .doOnError(this::onError)
-                                .subscribe(this::onEvent);
-                    }
-
-                });
+                .doOnError(this::onError)
+                .subscribe(this::onEvent);
 
     }
 

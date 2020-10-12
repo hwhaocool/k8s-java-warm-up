@@ -108,6 +108,8 @@ public class PodStatusCheckService implements InitializingBean {
                 .accept(MediaType.ALL)
                 .exchange()
                 .doOnError(this::onError)
+                .doOnCancel(() -> LOGGER.info("bad_response cancel"))
+                .doOnTerminate(() -> LOGGER.info("bad_response Terminate"))
                 .subscribe(clientResponse -> {
                     if (clientResponse.statusCode().is5xxServerError() || clientResponse.statusCode().is4xxClientError()) {
                         LOGGER.info("watch bad_response status code is {}", clientResponse.statusCode());

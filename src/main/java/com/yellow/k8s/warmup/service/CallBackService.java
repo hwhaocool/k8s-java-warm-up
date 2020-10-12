@@ -217,6 +217,7 @@ public class CallBackService {
         }
 
         return uriList.stream()
+                .filter(StringUtils::isNotBlank)
                 .map(k ->
                         new DefaultUriBuilderFactory()
                                 .builder()

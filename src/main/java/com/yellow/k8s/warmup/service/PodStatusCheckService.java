@@ -55,10 +55,9 @@ public class PodStatusCheckService implements InitializingBean {
         // 存在且为 true， 才 返回 true
         if (null == ifPresent) {
 
-            //不存在的时候，说明是第一次进来，此时也就是第一次预热，设置一下时间戳
-            cache.put(ip, new WarmUpInfo(System.currentTimeMillis()));
+            //不存在的时候，说明是第一次进来，此时也就是第一次预热，设置一下预热开始时间戳
 
-            LOGGER.info("isPodReady, first_check add_2_cache, ip {}", ip);
+            insert2Cache(ip, "isPodReady");
 
             return false;
         }
@@ -194,15 +193,16 @@ public class PodStatusCheckService implements InitializingBean {
             return;
         }
 
-        List<ContainerStatus> containerStatuses = podInfo.getStatus().getContainerStatuses();
-        if (CollectionUtils.isEmpty(containerStatuses)) {
-            return;
-        }
-
         WarmUpInfo ifPresent = cache.getIfPresent(podIP);
 
         if (null == ifPresent) {
-            ifPresent = new WarmUpInfo(System.currentTimeMillis());
+            //为空，说明此时 第一次请求还没来，啥也不干，直接退出，必须由第一次请求触发创建动作
+            return;
+        }
+
+        List<ContainerStatus> containerStatuses = podInfo.getStatus().getContainerStatuses();
+        if (CollectionUtils.isEmpty(containerStatuses)) {
+            return;
         }
 
         boolean ready = containerStatuses.get(0).isReady();
@@ -243,6 +243,12 @@ public class PodStatusCheckService implements InitializingBean {
      */
     private void onError(Throwable k) {
         LOGGER.error("request k8s api-server occur exception, ", k);
+    }
+
+    private void insert2Cache(String podIp, String from) {
+        cache.put(podIp, new WarmUpInfo(System.currentTimeMillis()));
+
+        LOGGER.info("add_2_cache, ip {}, from {}", podIp, from);
     }
 
 

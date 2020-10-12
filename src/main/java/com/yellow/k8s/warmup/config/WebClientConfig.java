@@ -1,7 +1,8 @@
 package com.yellow.k8s.warmup.config;
 
-import javax.net.ssl.SSLException;
-
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,13 +12,10 @@ import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClient.Builder;
-
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
+
+import javax.net.ssl.SSLException;
 
 @Configuration
 @ConfigurationProperties(prefix = "k8s")
@@ -53,34 +51,24 @@ public class WebClientConfig {
     }
     
     @Bean(name = "k8sClient")
-    public WebClient getWebClient() {
-        
-        Builder builder = WebClient.builder();
-        
-        try {
+    public WebClient k8sClient() throws SSLException {
 
-            ReactorResourceFactory factory = new ReactorResourceFactory();
-            factory.setConnectionProvider(ConnectionProvider.create("webflux-k8s", 5));
-            factory.setLoopResources(LoopResources.create("webflux-k8s"));
-            factory.setUseGlobalResources(false);
+        ReactorResourceFactory factory = new ReactorResourceFactory();
+        factory.setConnectionProvider(ConnectionProvider.create("webflux-k8s", 5));
+        factory.setLoopResources(LoopResources.create("webflux-k8s"));
+        factory.setUseGlobalResources(false);
 
-            SslContext sslContext = SslContextBuilder 
-                    .forClient() 
-                    .trustManager(InsecureTrustManagerFactory.INSTANCE) 
-                    .build();
-            
-            ClientHttpConnector httpConnector =
-                    new ReactorClientHttpConnector(factory ,
-                            opt -> opt.secure(t -> t.sslContext(sslContext)));
+        SslContext sslContext = SslContextBuilder
+                .forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
 
-            builder.clientConnector(httpConnector);
-            
-        } catch (SSLException e) {
-            LOGGER.error("SSLException, ", e);
-        } 
-        
-        
-        return builder
+        ClientHttpConnector httpConnector =
+                new ReactorClientHttpConnector(factory ,
+                        opt -> opt.secure(t -> t.sslContext(sslContext)));
+
+        return   WebClient.builder()
+                .clientConnector(httpConnector)
                 .defaultHeader("Authorization", String.format("Bearer %s", token))
                 .baseUrl(masterUrl)
                 .build();
@@ -89,25 +77,7 @@ public class WebClientConfig {
     @Bean(name = "restClient")
     public WebClient restClient() {
 
-        Builder builder = WebClient.builder();
-
-        try {
-            SslContext sslContext = SslContextBuilder
-                    .forClient()
-                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                    .build();
-
-            ClientHttpConnector httpConnector =
-                    new ReactorClientHttpConnector(resourceFactory() ,
-                            opt -> opt.secure(t -> t.sslContext(sslContext)));
-
-            builder.clientConnector(httpConnector);
-
-        } catch (SSLException e) {
-            LOGGER.error("SSLException, ", e);
-        }
-
-        return builder
+        return WebClient.builder()
                 .build();
     }
 

@@ -21,6 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
@@ -77,6 +78,8 @@ public class CallBackService {
     }
 
     public Mono<String> multi(WarmUpBatchRequest request) {
+        LOGGER.info("multi request {}", request);
+
         // 1. 生成 请求id
         final ObjectId requestId = ObjectId.get();
 
@@ -104,8 +107,6 @@ public class CallBackService {
 
         return result;
     }
-
-
 
     private void sendOneByOne(final BaseRequest request, final List<URI> uriList, final int index, final ObjectId requestId) {
 
@@ -216,22 +217,35 @@ public class CallBackService {
             return List.of();
         }
 
+
         return uriList.stream()
                 .filter(StringUtils::isNotBlank)
-                .map(k ->
-                        new DefaultUriBuilderFactory()
-                                .builder()
-                                .scheme("http")
-                                .host(request.getIp())
-                                .port(request.getPort())
-                                .path(k)
-                                .build()
+                .map(k -> {
+                            String[] split = k.split("\\?");
+                            String path = split[0];
+
+                            UriBuilder http = new DefaultUriBuilderFactory()
+                                    .builder()
+                                    .scheme("http")
+                                    .host(request.getIp())
+                                    .port(request.getPort())
+                                    .path(split[0]);
+
+                            if (split.length > 1) {
+                                String query = split[1];
+                                if (StringUtils.isNotBlank(query)) {
+                                    http.query(query);
+                                }
+                            }
+
+                            return http.build();
+                        }
                 ).collect(Collectors.toList());
     }
 
     private void saveCost2Db(final URI uri, final String podIp, final Long cost, final ObjectId requestId, final int index) {
 
-        LOGGER.info("saveCost2Db, uir {}, podIp {}, index {}, cost {}", uri, podIp, index, cost);
+        LOGGER.info("saveCost2Db, uri {}, podIp {}, index {}, cost {}", uri, podIp, index, cost);
 
 //        httpStatusRepository.save(genRequestDoc(uri, cost, requestId))
 //                .subscribe();

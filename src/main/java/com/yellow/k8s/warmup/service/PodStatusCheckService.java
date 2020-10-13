@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +32,7 @@ public class PodStatusCheckService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PodStatusCheckService.class);
 
-    private static final int WARM_UP_THRESHOLD = 60 * 1000;
+    private static final int WARM_UP_THRESHOLD = 5 * 60 * 1000;
 
     @Autowired
     @Qualifier("k8sClient")

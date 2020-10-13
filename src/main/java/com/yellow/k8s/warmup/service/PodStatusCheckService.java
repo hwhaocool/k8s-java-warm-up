@@ -65,9 +65,14 @@ public class PodStatusCheckService implements InitializingBean {
         boolean ready = ifPresent.isReady();
 
         long gap = System.currentTimeMillis() - ifPresent.getStartTime();
+        String seconds = String.format("%.2f", (double) gap / 1000);
+
+        if (ifPresent.isDel()) {
+            LOGGER.info("pod deleted, {} have been warm up {} ms,  {} s", ip, gap, seconds);
+            return true;
+        }
 
         if (ready) {
-            String seconds = String.format("%.2f", (double) gap / 1000);
             LOGGER.info("pod {} have been warm up {} ms,  {} s", ip, gap, seconds);
         } else {
             // 不 ready 的时候， 看下 是否超过阈值 60秒
@@ -230,7 +235,10 @@ public class PodStatusCheckService implements InitializingBean {
             return;
         }
 
-        cache.invalidate(podIP);
+        WarmUpInfo ifPresent = cache.getIfPresent(podIP);
+        if (null != ifPresent) {
+            ifPresent.setDel(true);
+        }
 
         String name = Null.of(() -> podInfo.getStatus().getContainerStatuses().get(0).getName());
         LOGGER.info("findDelEvent name {}, ip {}", name, podIP);

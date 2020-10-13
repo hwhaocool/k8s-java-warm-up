@@ -10,6 +10,8 @@ public class WarmUpInfo {
 
     private long startTime;
 
+    private boolean del;
+
     public WarmUpInfo() {
         ready = false;
     }
@@ -40,11 +42,20 @@ public class WarmUpInfo {
         this.startTime = startTime;
     }
 
+    public final boolean isDel() {
+        return del;
+    }
+
+    public final void setDel(final boolean del) {
+        this.del = del;
+    }
+
     @Override
     public String toString() {
         return "WarmUpInfo{" +
                 "ready=" + ready +
                 ", startTime=" + startTime +
+                ", del=" + del +
                 '}';
     }
 }

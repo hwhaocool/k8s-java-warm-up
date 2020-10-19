@@ -44,11 +44,11 @@ public class CallBackService {
     @Qualifier("restClient")
     private WebClient webClient;
 
-    @Autowired
-    private RequestRepository requestRepository;
+//    @Autowired
+//    private RequestRepository requestRepository;
 
-    @Autowired
-    private HttpStatusRepository httpStatusRepository;
+//    @Autowired
+//    private HttpStatusRepository httpStatusRepository;
 
     @Autowired
     private PodStatusCheckService podStatusCheckService;
@@ -68,8 +68,8 @@ public class CallBackService {
         final List<URI> uriList = genUri(request);
 
         // 4. 保存请求信息
-        requestRepository.save(genRequestDoc(request, requestId))
-            .subscribe();
+//        requestRepository.save(genRequestDoc(request, requestId))
+//            .subscribe();
 
         // 5. 发送
         sendOneByOne(request, uriList, 0, requestId);
@@ -95,8 +95,8 @@ public class CallBackService {
         final List<URI> uriList = genUri(request);
 
         // 4. 保存请求信息
-        requestRepository.save(genRequestDoc(request, requestId))
-                .subscribe();
+//        requestRepository.save(genRequestDoc(request, requestId))
+//                .subscribe();
 
         // 5. 发送, url 列表长度为队列数量，每一列都是 一个接一个
         List<List<URI>> collect = uriList.stream()

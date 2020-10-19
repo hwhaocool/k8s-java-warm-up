@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Date;
 
-@Repository
+//@Repository
 public interface HttpStatusRepository extends ReactiveCrudRepository<HttpStatusDocument, String> {
 
     @Query("{'requestId': ?0}")

@@ -16,7 +16,7 @@ import java.util.Date;
  * @author YellowTail
  * @since 2020-09-22
 // */
-@Repository
+//@Repository
 public interface RequestRepository  extends ReactiveCrudRepository<RequestDocument, String> {
 
     // PageRequest

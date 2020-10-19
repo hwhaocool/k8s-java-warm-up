@@ -17,8 +17,8 @@ import reactor.core.publisher.Mono;
  * @author YellowTail
  * @since 2020-09-22
  */
-@RestController
-@RequestMapping("/monitor")
+//@RestController
+//@RequestMapping("/monitor")
 public class MonitorController {
 
     @Autowired

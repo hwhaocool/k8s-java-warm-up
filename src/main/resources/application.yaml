@@ -11,10 +11,10 @@ spring:
     default-property-inclusion: non-null
     time-zone: GMT+8
 
-  data:
-    mongodb:
+#  data:
+#    mongodb:
         # 有使用到数据库，需要把链接信息配置到环境变量 mongodb-uri 里，比如： mongodb://name:passwd@db-major-primary:3717,db-major-secondary:3717/db
-        uri: ${mongodb-uri}
+#        uri: ${mongodb-uri}
 
 k8s:
   master-url: ${master-url}

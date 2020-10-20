@@ -10,7 +10,7 @@ ENV LC_ALL C.UTF-8
 EXPOSE 8080
 
 # RUN：构建镜像时执行的命令， 创建工作目录文件夹
-RUN mkdir /app
+RUN mkdir /app && mkdir /app/jvmlogs
 
 # 指定当前目标工作路径
 WORKDIR /app/

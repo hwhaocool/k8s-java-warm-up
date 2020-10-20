@@ -32,8 +32,8 @@
     <logger name="org.springframework.web.context.ContextLoader" level="INFO" />
 
     <!-- 这个日志打印 接口路径列表 -->
-    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="TRACE" />
-    <logger name="org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping" level="TRACE" />
+<!--    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="TRACE" />-->
+<!--    <logger name="org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping" level="TRACE" />-->
 
     <root level="INFO">
         <appender-ref ref="console" />
